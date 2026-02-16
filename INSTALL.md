@@ -7,16 +7,16 @@ The source code of libaec is hosted at DKRZ GitLab.
 The latest releases of libaec can be downloaded at the following
 locations:
 
-  https://gitlab.dkrz.de/k202009/libaec/-/releases
+  https://github.com//Deutsches-Klimarechenzentrum/libaec/releases
 
 or
 
-  https://github.com/MathisRosenhauer/libaec/releases
+  https://gitlab.dkrz.de/dkrz-sw/libaec/-/releases
 
 ## Developer snapshot
 
 ```shell
-  git clone https://gitlab.dkrz.de/k202009/libaec.git
+  git clone https://github.com//Deutsches-Klimarechenzentrum/libaec
 ```
 
 # Installation
