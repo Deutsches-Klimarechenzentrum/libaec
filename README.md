@@ -18,7 +18,14 @@ sections 1 to 5.2.6 of the [standard][1].
 
 ## Downloads
 
-Source code and binary installer can be [downloaded here](https://gitlab.dkrz.de/k202009/libaec/tags) [or here](https://github.com/MathisRosenhauer/libaec).
+The source code is available from the git repository at
+
+https://github.com/Deutsches-Klimarechenzentrum/libaec
+
+or
+
+https://gitlab.dkrz.de/dkrz-sw/libaec.
+
 
 ## Patent considerations
 
