@@ -1,7 +1,7 @@
 # libaec Changelog
 All notable changes to libaec will be documented in this file.
 
-## [1.1.6] - 2026-06-16
+## [1.1.6] - 2026-02-16
 
 ### Fixed
 - CMake fixes by Adrien Wu
