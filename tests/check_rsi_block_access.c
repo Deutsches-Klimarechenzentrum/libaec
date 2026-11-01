@@ -70,7 +70,7 @@ static void data_generator_random(struct aec_context *ctx)
     }
 
     size_t nvalues = ctx->obuf_len / nbytes;
-    size_t mask = (1 << (ctx->bits_per_sample - 1))-1;
+    size_t mask = ((size_t)1 << (ctx->bits_per_sample - 1)) - 1;
 
     for (size_t i = 0; i < nvalues; i++) {
         size_t value = rand() & mask;
@@ -96,7 +96,7 @@ static void data_generator_incr(struct aec_context *ctx)
     }
 
     size_t nvalues = ctx->obuf_len / nbytes;
-    size_t max_value = 1 << (ctx->bits_per_sample - 1);
+    size_t max_value = (size_t)1 << (ctx->bits_per_sample - 1);
 
     for (size_t i = 0; i < nvalues; i++) {
         size_t value = i % max_value;
