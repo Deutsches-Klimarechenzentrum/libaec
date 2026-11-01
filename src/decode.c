@@ -469,25 +469,27 @@ static int m_split(struct aec_stream *strm)
     if (BUFFERSPACE(strm)) {
         int k = state->id - 1;
         size_t binary_part = (k * state->encoded_block_size) / 8 + 9;
+        uint32_t *rsip = state->rsip;
 
-        /* Check input availability before any side effects on rsip so
-         * that a premature M_ERROR doesn't leave rsip partially
-         * advanced and corrupt the rsi_buffer on a subsequent call. */
+        if (state->ref)
+            *rsip++ = direct_get(strm, strm->bits_per_sample);
+
+        for (size_t i = 0; i < state->encoded_block_size; i++)
+            rsip[i] = direct_get_fs(strm) << k;
+
+        /* Long fundamental sequences in corrupted data may have
+         * consumed the input needed for the binary part. Only
+         * advance state->rsip once we know the block is complete. */
         if (k && strm->avail_in < binary_part)
             return M_ERROR;
 
-        if (state->ref)
-            *state->rsip++ = direct_get(strm, strm->bits_per_sample);
-
-        for (size_t i = 0; i < state->encoded_block_size; i++)
-            state->rsip[i] = direct_get_fs(strm) << k;
-
         if (k) {
             for (size_t i = 0; i < state->encoded_block_size; i++)
-                *state->rsip++ += direct_get(strm, k);
+                *rsip++ += direct_get(strm, k);
         } else {
-            state->rsip += state->encoded_block_size;
+            rsip += state->encoded_block_size;
         }
+        state->rsip = rsip;
 
         strm->avail_out -= state->out_blklen;
         state->mode = m_next_cds;
