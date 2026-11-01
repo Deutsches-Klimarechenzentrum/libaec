@@ -560,7 +560,7 @@ static int m_se_decode(struct aec_stream *strm)
     struct internal_state *state = strm->state;
 
     while(state->sample_counter < strm->block_size) {
-        int32_t m;
+        uint32_t m;
         int32_t d1;
         if (fs_ask(strm) == 0)
             return M_EXIT;

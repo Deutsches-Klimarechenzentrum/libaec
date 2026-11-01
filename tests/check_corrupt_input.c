@@ -39,7 +39,78 @@ static int check_split_truncated_binary_part(void)
     return 0;
 }
 
+static int check_se_huge_fs_small_output(void)
+{
+    /*
+       A Second Extension block (ID 000, then 1) whose first
+       fundamental sequence is longer than 2^31 zero bits. A one-byte
+       output buffer forces the decoder's slow path. The FS length
+       must not wrap to a negative table index; the decoder must
+       report a data error instead of reading outside se_table.
+     */
+    const size_t zero_len = 1 << 20;
+    const size_t zero_chunks = (1UL << 31) / 8 / zero_len;
+    unsigned char head = 0x10;
+    unsigned char tail = 0xff;
+    unsigned char *zeros;
+    unsigned char out[1];
+    struct aec_stream strm;
+    int status;
+
+    printf("Checking second extension with huge fundamental sequence ... ");
+
+    zeros = calloc(zero_len, 1);
+    if (zeros == NULL) {
+        fprintf(stderr, "Not enough memory.\n");
+        return 99;
+    }
+
+    memset(&strm, 0, sizeof(strm));
+    strm.bits_per_sample = 8;
+    strm.block_size = 8;
+    strm.rsi = 1;
+    strm.flags = 0;
+
+    if (aec_decode_init(&strm) != AEC_OK) {
+        printf("%s: init failed\n", CHECK_FAIL);
+        free(zeros);
+        return 99;
+    }
+
+    strm.next_out = out;
+    strm.avail_out = sizeof(out);
+    strm.next_in = &head;
+    strm.avail_in = 1;
+    status = aec_decode(&strm, AEC_NO_FLUSH);
+
+    for (size_t i = 0; i < zero_chunks && status == AEC_OK; i++) {
+        strm.next_in = zeros;
+        strm.avail_in = zero_len;
+        status = aec_decode(&strm, AEC_NO_FLUSH);
+    }
+
+    if (status == AEC_OK) {
+        strm.next_in = &tail;
+        strm.avail_in = 1;
+        status = aec_decode(&strm, AEC_NO_FLUSH);
+    }
+
+    aec_decode_end(&strm);
+    free(zeros);
+
+    if (status != AEC_DATA_ERROR) {
+        printf("%s: expected AEC_DATA_ERROR, got %i\n", CHECK_FAIL, status);
+        return 99;
+    }
+
+    printf("%s\n", CHECK_PASS);
+    return 0;
+}
+
 int main(void)
 {
-    return check_split_truncated_binary_part();
+    int status = check_split_truncated_binary_part();
+    if (status)
+        return status;
+    return check_se_huge_fs_small_output();
 }
