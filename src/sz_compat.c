@@ -70,6 +70,20 @@ static int bits_to_bytes(int bit_length)
         return 1;
 }
 
+static int check_params(const SZ_com_t *param)
+{
+    /* SZ_com_t fields are signed, so reject negative values here
+     * before they are converted to unsigned sizes. */
+    if (param->pixels_per_scanline <= 0
+        || param->pixels_per_scanline > 4096
+        || param->pixels_per_block <= 0
+        || param->pixels_per_block & 1
+        || param->bits_per_pixel <= 0
+        || (param->bits_per_pixel > 32 && param->bits_per_pixel != 64))
+        return SZ_PARAM_ERROR;
+    return SZ_OK;
+}
+
 static void interleave_buffer(void *dest, const void *src,
                               size_t n, size_t wordsize)
 {
@@ -144,12 +158,7 @@ int SZ_BufftoBuffCompress(void *dest, size_t *destLen,
     size_t padbuf_size;
     size_t padding_size;
 
-    if (param->pixels_per_scanline == 0
-        || param->pixels_per_scanline > 4096
-        || param->pixels_per_block == 0
-        || param->pixels_per_block & 1
-        || param->bits_per_pixel == 0
-        || (param->bits_per_pixel > 32 && param->bits_per_pixel != 64))
+    if (check_params(param) != SZ_OK)
         return SZ_PARAM_ERROR;
 
     strm.block_size = param->pixels_per_block;
@@ -233,12 +242,7 @@ int SZ_BufftoBuffDecompress(void *dest, size_t *destLen,
     size_t total_out;
     size_t scanlines;
 
-    if (param->pixels_per_scanline == 0
-        || param->pixels_per_scanline > 4096
-        || param->pixels_per_block == 0
-        || param->pixels_per_block & 1
-        || param->bits_per_pixel == 0
-        || (param->bits_per_pixel > 32 && param->bits_per_pixel != 64))
+    if (check_params(param) != SZ_OK)
         return SZ_PARAM_ERROR;
 
     strm.block_size = param->pixels_per_block;
@@ -286,13 +290,14 @@ int SZ_BufftoBuffDecompress(void *dest, size_t *destLen,
         goto CLEANUP;
 
     if (pad_scanline) {
-        size_t padding_size =
-            (strm.rsi * strm.block_size - param->pixels_per_scanline)
-            * pixel_size;
-        remove_padding(buf, strm.total_out,
-                       param->pixels_per_scanline * pixel_size,
-                       padding_size, pixel_size);
-        total_out = scanlines * param->pixels_per_scanline * pixel_size;
+        size_t line_size = param->pixels_per_scanline * pixel_size;
+        size_t padded_line_size = strm.rsi * strm.block_size * pixel_size;
+        remove_padding(buf, strm.total_out, line_size,
+                       padded_line_size - line_size, pixel_size);
+        /* Only count what was actually decoded. Truncated input
+         * leaves the rest of buf uninitialized. */
+        total_out = strm.total_out / padded_line_size * line_size
+            + MIN(strm.total_out % padded_line_size, line_size);
     } else {
         total_out = strm.total_out;
     }
