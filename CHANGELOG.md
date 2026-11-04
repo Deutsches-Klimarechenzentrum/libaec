@@ -1,6 +1,28 @@
 # libaec Changelog
 All notable changes to libaec will be documented in this file.
 
+## [1.1.8] - 2026-11-04
+
+### Added
+- The CMake package reports the installed library flavors as
+  components "shared" and "static", e.g.
+  find_package(libaec CONFIG REQUIRED COMPONENTS static).
+
+### Changed
+- After AEC_DATA_ERROR, further calls to aec_decode() on the same
+  stream keep returning AEC_DATA_ERROR.
+
+### Fixed
+- Heap buffer overflow in SZ_BufftoBuffCompress with negative
+  parameters.
+- Heap buffer overflow when decoding resumed after AEC_DATA_ERROR.
+- Uninitialized memory returned by aec_decode_range and
+  SZ_BufftoBuffDecompress for truncated input.
+- Out-of-bounds read in the decoder for fundamental sequences of 2^31
+  or more zero bits reported by Haind03 (#64).
+- Corrupted split blocks decoded to garbage instead of returning
+  AEC_DATA_ERROR.
+
 ## [1.1.7] - 2026-05-19
 
 ### Fixed
