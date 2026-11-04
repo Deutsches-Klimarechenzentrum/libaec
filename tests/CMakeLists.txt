@@ -27,6 +27,10 @@ add_custom_command(TARGET check_szcomp POST_BUILD
   COMMAND_EXPAND_LISTS
 )
 
+add_executable(check_sz_input check_sz_input.c)
+target_link_libraries(check_sz_input PUBLIC check_aec libaec::sz)
+add_test(NAME check_sz_input COMMAND check_sz_input)
+
 add_executable(check_rsi_block_access check_rsi_block_access.c)
 target_link_libraries(check_rsi_block_access PUBLIC check_aec libaec::aec)
 add_test(NAME check_rsi_block_access COMMAND check_rsi_block_access)

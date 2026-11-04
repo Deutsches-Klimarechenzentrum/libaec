@@ -673,6 +673,13 @@ static int m_uncomp(struct aec_stream *strm)
     return M_CONTINUE;
 }
 
+static int m_error(struct aec_stream *strm)
+{
+    /* Stay in error state. Resuming after a data error could leave
+     * a partial block in rsi_buffer and overrun it. */
+    return M_ERROR;
+}
+
 static void create_se_table(int *table)
 {
     int k = 0;
@@ -829,8 +836,10 @@ int aec_decode(struct aec_stream *strm, int flush)
         status = state->mode(strm);
     } while (status == M_CONTINUE);
 
-    if (status == M_ERROR)
+    if (status == M_ERROR) {
+        state->mode = m_error;
         return AEC_DATA_ERROR;
+    }
 
     if (status == M_EXIT && strm->avail_out > 0 &&
         strm->avail_out < state->bytes_per_sample) {
@@ -949,6 +958,12 @@ int aec_decode_range(struct aec_stream *strm, const size_t *rsi_offsets, size_t 
     if ((status = aec_decode(&strm_tmp, AEC_FLUSH)) != 0) {
         free(out_tmp);
         return status;
+    }
+
+    /* Truncated input leaves part of out_tmp uninitialized */
+    if (strm_tmp.total_out < pos % rsi_size + size) {
+        free(out_tmp);
+        return AEC_DATA_ERROR;
     }
 
     memcpy(strm->next_out, out_tmp + (pos - rsi_n * rsi_size), size);
