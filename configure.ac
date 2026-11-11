@@ -25,6 +25,11 @@ AC_CONFIG_HEADERS(config/config.h)
 LT_INIT
 gl_VISIBILITY
 AM_INIT_AUTOMAKE([foreign])
+# Keep macOS tar (bsdtar) from adding AppleDouble ._* files and xattr
+# headers to the make dist tarball.
+AS_IF([tar --no-mac-metadata --no-xattrs -cf /dev/null "$srcdir/configure.ac" \
+       >/dev/null 2>&1],
+      [am__tar='$${TAR-tar} --no-mac-metadata --no-xattrs -chf - "$$tardir"'])
 AM_MAINTAINER_MODE([enable])
 
 AC_PROG_CC

@@ -1,6 +1,12 @@
 # libaec Changelog
 All notable changes to libaec will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- Source tarballs created with make dist on macOS no longer contain
+  AppleDouble ._* files and xattr headers (#69).
+
 ## [1.1.8] - 2026-11-04
 
 ### Added
